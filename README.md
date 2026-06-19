@@ -33,21 +33,17 @@ curl -X POST https://s.dotrino.com/api/shorten \
 # -> {"ok":true,"code":"a1B2c3","short":"https://s.dotrino.com/a1B2c3"}
 ```
 
-## Uso en share buttons (y DOS reglas)
+## Uso: solo server-side (share buttons descartados)
 
-Muchas apps tienen botones de "compartir" que generan URLs largas (con data
-adicional). Pueden acortarse con este servicio para enlaces cortos de marca. Pero:
+Se usa desde scripts / workers / el bot (server-side). Se evaluó usarlo en **share
+buttons** de las apps (URLs largas con data adicional) pero se **descartó**, por:
 
-1. **Auth = server-side.** La API exige `SHORTENER_KEY`. Úsala desde scripts,
-   workers o el bot. En un share button **client-side NO** embebas la key (se
-   expone y cualquiera abusaría del acortador). Para client-side falta auth por
-   **firma del vault** (identity-gated, igual que `@dotrino/feedback` verifica
-   firmas server-side) o un endpoint público con rate-limit — **pendiente**.
+1. **Auth.** La API exige `SHORTENER_KEY`; embeberla en un share button client-side
+   la **expone** y habilita abuso del acortador. (Habilitar client-side requeriría
+   auth por **firma del vault**, como `@dotrino/feedback`.)
 
-2. **Privacidad.** Acortar **guarda la URL completa en KV (servidor)**. Si el
-   share link lleva **contenido de usuario en el `#fragment`** (`#room=`, `#rm=`,
-   pronósticos, perfiles…), ese contenido **llega al servidor** y contradice la
-   regla del ecosistema "el `#fragment` nunca llega al servidor". Acorta libremente
-   links **públicos** (noticias, marketing, landing de apps); para share links con
-   datos de usuario es un trade-off consciente (compartir es consensuado + TTL
-   corto) o **no los acortes** (deja el `#fragment` client-side).
+2. **Privacidad.** Acortar **guarda la URL completa en KV (servidor)**. Si el share
+   link lleva **contenido de usuario en el `#fragment`** (`#room=`, `#rm=`,
+   pronósticos, perfiles…), ese contenido **llega al servidor**, contra la regla
+   "el `#fragment` nunca llega al servidor". Por eso los share links de usuario **no
+   se acortan**; acortar solo links **públicos** (noticias, marketing).
