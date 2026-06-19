@@ -17,7 +17,7 @@
 const BASE62 = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 const RESERVED = new Set(['api', 'favicon.ico', 'robots.txt', ''])
 
-function genCode(n = 6) {
+function genCode(n = 4) {
   const b = crypto.getRandomValues(new Uint8Array(n))
   let s = ''
   for (const x of b) s += BASE62[x % 62]
@@ -66,11 +66,20 @@ async function shorten(request, env, origin) {
     if (RESERVED.has(code)) return json({ ok: false, error: 'code_reserved' }, 409, cors())
     if (await env.LINKS.get(code)) return json({ ok: false, error: 'code_taken' }, 409, cors())
   } else {
-    for (let i = 0; i < 6; i++) { code = genCode(6); if (!(await env.LINKS.get(code))) break }
+    // Código SÚPER corto (4 chars por defecto). Con TTL la tabla activa es chica,
+    // así que las colisiones son raras; si aparecen, alarga el código.
+    let len = Number(env.CODE_LEN) || 4
+    for (let i = 0; i < 8; i++) {
+      code = genCode(len)
+      if (!(await env.LINKS.get(code))) break
+      if (i >= 3) len++
+    }
   }
-  await env.LINKS.put(code, JSON.stringify({ url: target, ts: Date.now() }))
+  // Vida limitada (TTL nativo de KV; expira y se borra solo). Default 1 mes.
+  const ttl = Math.max(60, Number(body.ttl) || Number(env.DEFAULT_TTL) || 2592000)
+  await env.LINKS.put(code, JSON.stringify({ url: target, ts: Date.now(), exp: Date.now() + ttl * 1000 }), { expirationTtl: ttl })
   const base = (env.BASE_URL || origin).replace(/\/+$/, '')
-  return json({ ok: true, code, short: `${base}/${code}` }, 200, cors())
+  return json({ ok: true, code, short: `${base}/${code}`, ttl }, 200, cors())
 }
 
 /* ───────── helpers ───────── */
@@ -83,10 +92,14 @@ const json = (obj, status, headers = {}) =>
   new Response(JSON.stringify(obj), { status, headers: { ...headers, 'content-type': 'application/json' } })
 const html = (body, status) => new Response(body, { status, headers: { 'content-type': 'text/html; charset=utf-8' } })
 
-const NOTFOUND = `<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex">
-<title>Enlace no encontrado — Dotrino</title>
-<body style="font-family:'Quicksand',system-ui,sans-serif;background:#f4f7f9;color:#181c1e;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0">
-<div style="text-align:center"><h1 style="color:#00658c">Enlace no encontrado</h1><p>Este enlace corto no existe o expiró. <a href="https://dotrino.com" style="color:#00658c">Ir a Dotrino</a></p></div>`
+const NOTFOUND = `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex, nofollow">
+<title>Enlace expirado — Dotrino</title></head>
+<body style="font-family:'Quicksand',system-ui,-apple-system,Segoe UI,sans-serif;background:#f4f7f9;color:#181c1e;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0;padding:1.2rem">
+<div style="background:#fff;border:1px solid #e3e9ed;border-radius:20px;box-shadow:0 14px 40px rgba(74,85,96,.08);padding:2rem;max-width:26rem;text-align:center">
+<h1 style="color:#00658c;font-size:1.4rem;margin:0 0 .6rem">Este enlace expiró</h1>
+<p style="color:#4a5560;margin:0 0 1.2rem">Los enlaces cortos de Dotrino tienen vida limitada. Este ya no está disponible.</p>
+<a href="https://dotrino.com" style="display:inline-block;background:#00658c;color:#fff;text-decoration:none;font-weight:700;padding:.7rem 1.4rem;border-radius:999px">Ir a Dotrino</a>
+</div></body></html>`
 
 const UI = (env) => `<!doctype html><html lang="es"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">

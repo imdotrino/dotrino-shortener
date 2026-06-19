@@ -5,6 +5,10 @@ compatibility_date = "2025-06-01"
 [vars]
 # Dominio base para construir los enlaces cortos. Cambia si usas otro subdominio.
 BASE_URL = "https://s.dotrino.com"
+# Vida del enlace en segundos (TTL nativo de KV). 2592000 = 30 días (1 mes).
+DEFAULT_TTL = "2592000"
+# Longitud del código corto (4 = súper corto: s.dotrino.com/aB3x).
+CODE_LEN = "4"
 
 # KV donde se guardan los enlaces (code -> { url, ts }).
 # Crear con:  npx wrangler kv namespace create LINKS
