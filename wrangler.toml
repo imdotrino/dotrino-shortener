@@ -2,6 +2,11 @@ name = "dotrino-shortener"
 main = "src/index.js"
 compatibility_date = "2025-06-01"
 
+# Dominio corto del acortador (sobreescribe el wildcard *.dotrino.com -> GitHub).
+routes = [
+  { pattern = "s.dotrino.com", custom_domain = true },
+]
+
 [vars]
 # Dominio base para construir los enlaces cortos. Cambia si usas otro subdominio.
 BASE_URL = "https://s.dotrino.com"
@@ -15,6 +20,6 @@ CODE_LEN = "4"
 # y pegar el id aquí:
 [[kv_namespaces]]
 binding = "LINKS"
-id = "REEMPLAZAR_CON_EL_ID_DE_KV"
+id = "2eaec5f1c3074e04bb7504f85f0ca391"
 
 # Secret (NO va en este archivo):  npx wrangler secret put SHORTENER_KEY
