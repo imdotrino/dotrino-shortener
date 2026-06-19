@@ -1,0 +1,16 @@
+name = "dotrino-shortener"
+main = "src/index.js"
+compatibility_date = "2025-06-01"
+
+[vars]
+# Dominio base para construir los enlaces cortos. Cambia si usas otro subdominio.
+BASE_URL = "https://s.dotrino.com"
+
+# KV donde se guardan los enlaces (code -> { url, ts }).
+# Crear con:  npx wrangler kv namespace create LINKS
+# y pegar el id aquí:
+[[kv_namespaces]]
+binding = "LINKS"
+id = "REEMPLAZAR_CON_EL_ID_DE_KV"
+
+# Secret (NO va en este archivo):  npx wrangler secret put SHORTENER_KEY

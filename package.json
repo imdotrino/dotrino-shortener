@@ -1,0 +1,13 @@
+{
+  "name": "dotrino-shortener",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Acortador de enlaces del ecosistema Dotrino (Cloudflare Worker + KV)",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^3.114.0"
+  }
+}
