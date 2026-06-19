@@ -32,3 +32,22 @@ curl -X POST https://s.dotrino.com/api/shorten \
   -d '{"url":"https://themarkup.org/privacy/2021/12/06/..."}'
 # -> {"ok":true,"code":"a1B2c3","short":"https://s.dotrino.com/a1B2c3"}
 ```
+
+## Uso en share buttons (y DOS reglas)
+
+Muchas apps tienen botones de "compartir" que generan URLs largas (con data
+adicional). Pueden acortarse con este servicio para enlaces cortos de marca. Pero:
+
+1. **Auth = server-side.** La API exige `SHORTENER_KEY`. Úsala desde scripts,
+   workers o el bot. En un share button **client-side NO** embebas la key (se
+   expone y cualquiera abusaría del acortador). Para client-side falta auth por
+   **firma del vault** (identity-gated, igual que `@dotrino/feedback` verifica
+   firmas server-side) o un endpoint público con rate-limit — **pendiente**.
+
+2. **Privacidad.** Acortar **guarda la URL completa en KV (servidor)**. Si el
+   share link lleva **contenido de usuario en el `#fragment`** (`#room=`, `#rm=`,
+   pronósticos, perfiles…), ese contenido **llega al servidor** y contradice la
+   regla del ecosistema "el `#fragment` nunca llega al servidor". Acorta libremente
+   links **públicos** (noticias, marketing, landing de apps); para share links con
+   datos de usuario es un trade-off consciente (compartir es consensuado + TTL
+   corto) o **no los acortes** (deja el `#fragment` client-side).
