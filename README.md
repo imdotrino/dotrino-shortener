@@ -1,5 +1,7 @@
 # @dotrino/shortener
 
+> **Parte del ecosistema [Dotrino](https://dotrino.com).** Misión: aplicaciones que resuelven problemas comunes, respetando tu privacidad — sin anuncios, sin cookies, sin rastreo de datos, sin vender tu identidad a nadie.
+
 Acortador de enlaces del ecosistema **Dotrino**. Cloudflare Worker + KV.
 Autohospedado, sin terceros (filosofía Dotrino: tu información, bajo tus reglas).
 Enlaces de marca tipo `s.dotrino.com/abc123`.
