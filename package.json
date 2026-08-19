@@ -5,9 +5,11 @@
   "description": "Acortador de enlaces del ecosistema Dotrino (Cloudflare Worker + KV)",
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "wrangler deploy"
+    "deploy": "wrangler deploy",
+    "type-check": "tsc --noEmit"
   },
   "devDependencies": {
-    "wrangler": "^3.114.0"
+    "wrangler": "^3.114.0",
+    "typescript": "5.9.3"
   }
 }
