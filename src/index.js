@@ -8,14 +8,21 @@
  *   GET  /<code>        -> 302 al destino guardado en KV.
  *   POST /api/shorten   -> { url, code? }  (Bearer SHORTENER_KEY)  -> { ok, code, short }
  *   GET  /              -> UI mínima (admin: pega tu clave + la URL).
+ *   GET  /version       -> { product, version, commit }: qué está desplegado.
  *
  * Binding KV:  LINKS   (code -> JSON { url, ts })
  * Vars:        BASE_URL (p. ej. "https://s.dotrino.com")
+ *              COMMIT, VERSION  (los pone `npm run deploy`, no van en wrangler.toml)
  * Secret:      SHORTENER_KEY  (wrangler secret put SHORTENER_KEY)
+ *
+ * QUÉ VERSIÓN CORRE (CONVENCIONES §15). Un Worker no se instala en ninguna máquina, así
+ * que no puede mirar si hay versión nueva: lo que puede es DECIR qué commit se desplegó.
+ * Con eso `dotrino-index` lo compara con `main` y enseña si lo desplegado va por detrás.
+ * Sale en `/version` y en el `<meta name="commit">` de la portada, como en cualquier app.
  */
 
 const BASE62 = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-const RESERVED = new Set(['api', 'favicon.ico', 'robots.txt', ''])
+const RESERVED = new Set(['api', 'version', 'favicon.ico', 'robots.txt', ''])
 
 function genCode(n = 4) {
   const b = crypto.getRandomValues(new Uint8Array(n))
@@ -31,6 +38,11 @@ export default {
 
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors() })
     if (path === '/' || path === '') return html(UI(env), 200)
+    if (path === '/version') {
+      // Sin commit no hay nada que afirmar: se dice, en vez de contestar una versión a medias.
+      if (!env.COMMIT || !env.VERSION) return json({ ok: false, error: 'no_version' }, 500, cors())
+      return json({ ok: true, product: 'shortener', version: env.VERSION, commit: env.COMMIT }, 200, cors())
+    }
     if (path === '/robots.txt') return new Response('User-agent: *\nDisallow: /', { status: 200, headers: { 'content-type': 'text/plain' } })
     if (path === '/api/shorten') {
       if (request.method !== 'POST') return json({ ok: false, error: 'method_not_allowed' }, 405)
@@ -85,7 +97,7 @@ async function shorten(request, env, origin) {
 /* ───────── helpers ───────── */
 const cors = () => ({
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-api-key',
 })
 const json = (obj, status, headers = {}) =>
@@ -104,6 +116,7 @@ const NOTFOUND = `<!doctype html><html lang="es"><head><meta charset="utf-8"><me
 const UI = (env) => `<!doctype html><html lang="es"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
+<meta name="commit" content="${env.COMMIT || ''}">
 <title>Acortador — Dotrino</title>
 <style>
   :root{color-scheme:light}

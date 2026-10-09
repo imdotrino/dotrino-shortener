@@ -19,7 +19,7 @@ Enlaces de marca tipo `s.dotrino.com/abc123`.
    (`[[kv_namespaces]].id`).
 2. **Secret**: `npx wrangler secret put SHORTENER_KEY` (clave fuerte; la usa el bot
    de posts y la UI admin).
-3. **Deploy**: `npx wrangler deploy`.
+3. **Deploy**: `npm run deploy` (no `wrangler deploy` a secas: el script pasa el commit y la versión, que el Worker enseña en `/version`; se para si hay cambios sin subir).
 4. **Dominio** `s.dotrino.com`: en el dashboard de Cloudflare → Workers →
    `dotrino-shortener` → Settings → Domains & Routes → Add Custom Domain →
    `s.dotrino.com` (sobreescribe el wildcard `*.dotrino.com`→GitHub). Si usas otro
